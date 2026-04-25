@@ -92,6 +92,7 @@ if st.session_state["prediction"] is not None:
 
             st.write("🤖 AI Advice:")
             st.write(response.text)
+            st.write("Note: Prediction is based on training data patterns.")
 
         except Exception as e:
             # 🔥 fallback (VERY IMPORTANT for hackathon)
