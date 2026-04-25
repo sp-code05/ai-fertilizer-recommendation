@@ -24,7 +24,12 @@ X = data.drop("Fertilizer Name", axis=1)
 y = data["Fertilizer Name"]
 
 # Create model
-model = RandomForestClassifier()
+model = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=10,
+    random_state=42,
+    class_weight='balanced'
+)
 
 # Train model
 model.fit(X, y)
