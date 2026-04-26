@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
-import google.generativeai as genai
+from google import genai
 
-# 🔑 Put your API key here (for local testing)
-genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+# ---------------- GEMINI CLIENT ----------------
+client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # ---------------- MODEL ----------------
 @st.cache_resource
@@ -69,7 +69,7 @@ if st.button("🔍 Predict Fertilizer"):
 
     st.success(f"🌾 Recommended Fertilizer: {prediction[0]}")
 
-# ---------------- AI ADVICE (FINAL WORKING) ----------------
+# ---------------- AI ADVICE ----------------
 if st.session_state["prediction"] is not None:
     if st.button("💡 Get AI Advice"):
 
@@ -80,6 +80,8 @@ if st.session_state["prediction"] is not None:
         Temperature: {temperature}
         Humidity: {humidity}
         Nitrogen: {nitrogen}
+        Phosphorous: {phosphorous}
+        Potassium: {potassium}
 
         Recommended fertilizer: {st.session_state["prediction"]}
 
@@ -87,8 +89,10 @@ if st.session_state["prediction"] is not None:
         """
 
         try:
-            model_gemini = genai.GenerativeModel("gemini-1.5-flash")
-            response = model_gemini.generate_content(prompt)
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
 
             st.write("🤖 AI Advice:")
             st.write(response.text)
@@ -104,6 +108,7 @@ if st.session_state["prediction"] is not None:
             This fertilizer is suitable based on your soil and nutrient levels.
             Ensure proper irrigation and monitor crop health regularly.
             """)
+
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.markdown("Made for AI Hackathon 🚀")
