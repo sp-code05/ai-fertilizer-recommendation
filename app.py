@@ -95,8 +95,8 @@ if st.session_state["prediction"] is not None:
             st.write("Note: Prediction is based on training data patterns.")
 
         except Exception as e:
-            # 🔥 fallback (VERY IMPORTANT for hackathon)
-            st.warning("AI unavailable, showing basic advice")
+            st.error("AI ERROR:")
+            st.write(e)
 
             st.write(f"""
             🌾 Recommended Fertilizer: **{st.session_state["prediction"]}**
