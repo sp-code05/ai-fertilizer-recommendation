@@ -70,23 +70,25 @@ if st.button("🔍 Predict Fertilizer"):
     st.success(f"🌾 Recommended Fertilizer: {prediction[0]}")
 
 # ---------------- AI ADVICE ----------------
+# ---------------- AI ADVICE ----------------
 if st.session_state["prediction"] is not None:
     if st.button("💡 Get AI Advice"):
 
         prompt = f"""
-        A farmer has:
-        Soil Type: {soil_type}
-        Crop Type: {crop_type}
-        Temperature: {temperature}
-        Humidity: {humidity}
-        Nitrogen: {nitrogen}
-        Phosphorous: {phosphorous}
-        Potassium: {potassium}
+A farmer has:
 
-        Recommended fertilizer: {st.session_state["prediction"]}
+Soil Type: {soil_type}
+Crop Type: {crop_type}
+Temperature: {temperature}
+Humidity: {humidity}
+Nitrogen: {nitrogen}
+Phosphorous: {phosphorous}
+Potassium: {potassium}
 
-        Explain why this fertilizer is suitable and give simple farming advice.
-        """
+Recommended fertilizer: {st.session_state["prediction"]}
+
+Explain why this fertilizer is suitable and give simple farming advice.
+"""
 
         try:
             response = client.models.generate_content(
@@ -94,21 +96,26 @@ if st.session_state["prediction"] is not None:
                 contents=prompt
             )
 
-            st.write("🤖 AI Advice:")
+            st.success("🤖 AI Advice:")
             st.write(response.text)
-            st.write("Note: Prediction is based on training data patterns.")
 
         except Exception as e:
-            st.error("AI ERROR:")
-            st.write(e)
+            st.warning("⚠️ AI service is temporarily unavailable.")
 
-            st.write(f"""
-            🌾 Recommended Fertilizer: **{st.session_state["prediction"]}**
+            st.info(f"""
+🌾 Recommended Fertilizer: **{st.session_state["prediction"]}**
 
-            This fertilizer is suitable based on your soil and nutrient levels.
-            Ensure proper irrigation and monitor crop health regularly.
-            """)
+This recommendation is based on trained agricultural data patterns.
 
+💡 General Farming Advice:
+- Maintain balanced irrigation
+- Avoid overuse of nitrogen fertilizers
+- Monitor crop health regularly
+- Use organic compost when possible
+""")
+
+            # Optional debug (remove in final hackathon submission)
+            # st.write(e)
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.markdown("Made for AI Hackathon 🚀")
