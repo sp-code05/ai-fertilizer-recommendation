@@ -87,7 +87,7 @@ if st.session_state["prediction"] is not None:
         """
 
         try:
-            model_gemini = genai.GenerativeModel("gemini-1.0-pro")
+            model_gemini = genai.GenerativeModel("gemini-1.5-flash")
             response = model_gemini.generate_content(prompt)
 
             st.write("🤖 AI Advice:")
