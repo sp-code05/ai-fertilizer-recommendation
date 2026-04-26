@@ -70,7 +70,6 @@ if st.button("🔍 Predict Fertilizer"):
     st.success(f"🌾 Recommended Fertilizer: {prediction[0]}")
 
 # ---------------- AI ADVICE ----------------
-# ---------------- AI ADVICE ----------------
 if st.session_state["prediction"] is not None:
     if st.button("💡 Get AI Advice"):
 
@@ -99,23 +98,21 @@ Explain why this fertilizer is suitable and give simple farming advice.
             st.success("🤖 AI Advice:")
             st.write(response.text)
 
-        except Exception as e:
-            st.warning("⚠️ AI service is temporarily unavailable.")
+        except Exception:
+            st.warning("⚠️ AI service unavailable. Showing fallback advice.")
 
             st.info(f"""
-🌾 Recommended Fertilizer: **{st.session_state["prediction"]}**
+🌾 Recommended Fertilizer: {st.session_state["prediction"]}
 
-This recommendation is based on trained agricultural data patterns.
+✔ Based on trained agricultural dataset patterns.
 
 💡 General Farming Advice:
 - Maintain balanced irrigation
-- Avoid overuse of nitrogen fertilizers
+- Avoid excess nitrogen fertilizer
 - Monitor crop health regularly
 - Use organic compost when possible
 """)
 
-            # Optional debug (remove in final hackathon submission)
-            # st.write(e)
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.markdown("Made for AI Hackathon 🚀")
