@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import google.generativeai as genai
 
-# ---------------- CONFIG ----------------
+# ---------------- API CONFIG ----------------
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # ---------------- MODEL ----------------
@@ -90,22 +90,38 @@ Explain why this fertilizer is suitable and give simple farming advice.
 """
 
         try:
-            model_gemini = genai.GenerativeModel("gemini-1.5-flash-latest")
+            # Use safest working model
+            model_gemini = genai.GenerativeModel("gemini-pro")
             response = model_gemini.generate_content(prompt)
 
             st.success("AI Advice:")
             st.write(response.text)
 
         except Exception as e:
-            st.warning("AI service unavailable. Showing fallback advice.")
+            st.warning("AI unavailable. Using smart offline advice.")
             st.write(e)
 
-            st.info(f"""
-Recommended Fertilizer: {st.session_state["prediction"]}
+            fert = st.session_state["prediction"]
 
-General Advice:
-- Maintain balanced irrigation
-- Avoid excess nitrogen fertilizer
+            # -------- OFFLINE AI LOGIC --------
+            if "Urea" in fert:
+                advice = "High nitrogen fertilizer. Best for leafy growth. Avoid overuse."
+            elif "DAP" in fert:
+                advice = "Rich in phosphorus. Helps root development and early plant growth."
+            elif "10-26-26" in fert:
+                advice = "Balanced fertilizer. Suitable for overall crop health."
+            elif "14-35-14" in fert:
+                advice = "Supports strong root and shoot growth."
+            else:
+                advice = "Apply fertilizer carefully based on soil condition."
+
+            st.success("Smart Advice:")
+            st.write(advice)
+
+            st.info("""
+General Farming Tips:
+- Maintain proper irrigation
+- Avoid over-fertilization
 - Monitor crop health regularly
 - Use organic compost when possible
 """)
