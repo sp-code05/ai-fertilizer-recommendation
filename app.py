@@ -13,7 +13,7 @@ st.set_page_config(page_title="AI Fertilizer System", layout="centered")
 # ---------------- GEMINI SETUP ----------------
 try:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model_gemini = genai.GenerativeModel("gemini-1.5-flash")
+    model_gemini = genai.GenerativeModel("models/text-bison-001")
     gemini_available = True
 except:
     gemini_available = False
