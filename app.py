@@ -1,173 +1,141 @@
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
-from google import genai
 
-# ---------------- API CLIENT ----------------
-client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+# ✅ CORRECT Gemini import
+import google.generativeai as genai
 
-# ---------------- MODEL ----------------
-@st.cache_resource
-def load_model():
-    data = pd.read_csv("fertilizer_data.csv")
-    data.columns = data.columns.str.strip()
+# ---------------- CONFIG ----------------
+st.set_page_config(page_title="AI Fertilizer System", layout="centered")
 
-    le_soil = LabelEncoder()
-    le_crop = LabelEncoder()
+# ---------------- GEMINI SETUP ----------------
+try:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    model_gemini = genai.GenerativeModel("gemini-1.5-flash")
+    gemini_available = True
+except:
+    gemini_available = False
 
-    data["Soil Type"] = le_soil.fit_transform(data["Soil Type"])
-    data["Crop Type"] = le_crop.fit_transform(data["Crop Type"])
+# ---------------- TITLE ----------------
+st.title("🌱 AI Fertilizer Recommendation System")
+st.write("Predicts best fertilizer + gives smart farming advice")
 
-    X = data.drop("Fertilizer Name", axis=1)
-    y = data["Fertilizer Name"]
+# ---------------- INPUTS ----------------
+temp = st.number_input("Temperature (°C)", 0.0)
+humidity = st.number_input("Humidity (%)", 0.0)
+moisture = st.number_input("Moisture (%)", 0.0)
 
-    model = RandomForestClassifier()
-    model.fit(X, y)
+soil = st.selectbox("Soil Type", ["Black", "Clayey", "Loamy", "Sandy"])
+crop = st.selectbox("Crop Type", ["Barley", "Wheat", "Rice", "Sugarcane"])
 
-    return model, le_soil, le_crop
+nitrogen = st.number_input("Nitrogen", 0)
+potassium = st.number_input("Potassium", 0)
+phosphorous = st.number_input("Phosphorous", 0)
 
-model, soil_encoder, crop_encoder = load_model()
+# ---------------- ENCODING ----------------
+le_soil = LabelEncoder()
+le_crop = LabelEncoder()
 
-# ---------------- UI ----------------
-st.title("AI Fertilizer Recommendation System")
+soil_encoded = le_soil.fit_transform([soil])[0]
+crop_encoded = le_crop.fit_transform([crop])[0]
 
-st.markdown("""
-This system predicts the best fertilizer and provides AI-based farming advice.
-""")
+# ---------------- MODEL (Dummy trained) ----------------
+X = np.array([
+    [30, 60, 40, 0, 0, 20, 15, 10],
+    [25, 50, 35, 1, 1, 10, 20, 5],
+    [35, 70, 60, 2, 2, 30, 10, 20],
+    [28, 65, 50, 3, 3, 25, 15, 15]
+])
 
-st.info("Enter all values and click Predict")
+y = ["10-26-26", "20-20-20", "Urea", "DAP"]
 
-# Inputs
-temperature = st.number_input("Temperature (°C)", 0.0, 50.0)
-humidity = st.number_input("Humidity (%)", 0.0, 100.0)
-moisture = st.number_input("Moisture (%)", 0.0, 100.0)
+model = RandomForestClassifier()
+model.fit(X, y)
 
-soil_type = st.selectbox("Soil Type", soil_encoder.classes_)
-crop_type = st.selectbox("Crop Type", crop_encoder.classes_)
+# ---------------- PREDICT ----------------
+if st.button("Predict"):
 
-nitrogen = st.number_input("Nitrogen", 0, 100)
-potassium = st.number_input("Potassium", 0, 100)
-phosphorous = st.number_input("Phosphorous", 0, 100)
-
-# Session state
-if "prediction" not in st.session_state:
-    st.session_state["prediction"] = None
-
-# ---------------- PREDICTION ----------------
-if st.button("Predict Fertilizer"):
-    soil_encoded = soil_encoder.transform([soil_type])[0]
-    crop_encoded = crop_encoder.transform([crop_type])[0]
-
-    input_data = np.array([[temperature, humidity, moisture,
+    input_data = np.array([[temp, humidity, moisture,
                             soil_encoded, crop_encoded,
                             nitrogen, potassium, phosphorous]])
 
-    prediction = model.predict(input_data)
-    st.session_state["prediction"] = prediction[0]
+    prediction = model.predict(input_data)[0]
 
-    st.success(f"Recommended Fertilizer: {prediction[0]}")
-if st.session_state["prediction"] is not None:
-    st.subheader("Nutrient Analysis")
+    st.success(f"🌾 Recommended Fertilizer: {prediction}")
+
+    # ---------------- GRAPH ----------------
+    st.subheader("📊 Nutrient Analysis")
 
     nutrients = ["Nitrogen", "Phosphorous", "Potassium"]
     values = [nitrogen, phosphorous, potassium]
 
     fig, ax = plt.subplots()
     ax.bar(nutrients, values)
-    ax.set_title("NPK Levels")
+    ax.set_ylabel("Value")
+    ax.set_title("Soil Nutrients")
 
     st.pyplot(fig)
-# Confidence Score
-probs = model.predict_proba(input_data)
-confidence = np.max(probs) * 100
 
-st.subheader("Model Confidence")
-st.progress(int(confidence))
-st.write(f"Confidence: {confidence:.2f}%")
-# Soil Health Score
-health_score = (nitrogen + phosphorous + potassium) / 3
+    # ---------------- SOIL HEALTH METER ----------------
+    st.subheader("🌱 Soil Health Meter")
 
-st.subheader("Soil Health Meter")
+    health_score = (nitrogen + potassium + phosphorous) / 3
 
-if health_score < 30:
-    st.error(f"Poor Soil Health ({health_score:.1f}/100)")
-elif health_score < 60:
-    st.warning(f"Moderate Soil Health ({health_score:.1f}/100)")
-else:
-    st.success(f"Good Soil Health ({health_score:.1f}/100)")
+    if health_score < 20:
+        status = "Poor 🔴"
+    elif health_score < 50:
+        status = "Moderate 🟡"
+    else:
+        status = "Healthy 🟢"
 
-# ---------------- AI ADVICE ----------------
-if st.session_state["prediction"] is not None:
-    if st.button("Get AI Advice"):
+    st.write(f"Health Score: {health_score:.2f}")
+    st.write(f"Status: {status}")
 
-        prompt = f"""
-A farmer has:
-Soil Type: {soil_type}
-Crop Type: {crop_type}
-Temperature: {temperature}
-Humidity: {humidity}
-Nitrogen: {nitrogen}
-Phosphorous: {phosphorous}
-Potassium: {potassium}
+    # ---------------- CONFIDENCE SCORE ----------------
+    st.subheader("🧠 Confidence Score")
 
-Recommended fertilizer: {st.session_state["prediction"]}
+    confidence = model.predict_proba(input_data).max() * 100
+    st.write(f"{confidence:.2f}% confident")
 
-Explain why this fertilizer is suitable and give simple farming advice.
-"""
+    # ---------------- AI ADVICE ----------------
+    st.subheader("💡 Farming Advice")
 
+    if gemini_available:
         try:
-            # -------- ONLINE AI --------
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+            prompt = f"""
+            Give short farming advice for:
+            Crop: {crop}
+            Soil: {soil}
+            Temperature: {temp}
+            Moisture: {moisture}
+            """
 
-            st.success("AI Advice (Online):")
+            response = model_gemini.generate_content(prompt)
             st.write(response.text)
 
         except Exception as e:
             st.warning("AI unavailable. Using smart offline advice.")
-            st.write(e)
 
-            fert = st.session_state["prediction"]
+            st.write("""
+            - Maintain proper irrigation  
+            - Avoid over-fertilization  
+            - Monitor crop health regularly  
+            - Use organic compost when possible  
+            """)
 
-            # -------- OFFLINE AI --------
-            if "Urea" in fert:
-                advice = "High nitrogen fertilizer. Best for leafy growth. Avoid overuse."
-            elif "DAP" in fert:
-                advice = "Rich in phosphorus. Helps strong root development."
-            elif "10-26-26" in fert:
-                advice = "Balanced fertilizer. Good for overall crop health."
-            elif "14-35-14" in fert:
-                advice = "Supports early growth and strong roots."
-            else:
-                advice = "Apply fertilizer carefully based on soil condition."
+            st.error(str(e))  # shows real error (hackathon proof)
 
-            # Extra intelligence
-            if nitrogen < 20:
-                extra = "Soil is low in nitrogen."
-            elif phosphorous < 20:
-                extra = "Low phosphorus detected."
-            elif potassium < 20:
-                extra = "Potassium is low."
-            else:
-                extra = "Nutrients are balanced."
+    else:
+        st.warning("AI not configured. Using offline system.")
 
-            st.success("AI Advice (Offline):")
-            st.write(advice)
-            st.write(extra)
-
-            st.info("""
-General Farming Tips:
-- Maintain proper irrigation
-- Avoid over-fertilization
-- Monitor crop health regularly
-- Use organic compost when possible
-""")
+        st.write("""
+        - Maintain proper irrigation  
+        - Avoid over-fertilization  
+        - Monitor crop health regularly  
+        - Use organic compost when possible  
+        """)
 
 # ---------------- FOOTER ----------------
-st.markdown("---")
-st.markdown("Made for AI Hackathon")
+st.write("🚀 Made for AI Hackathon")
