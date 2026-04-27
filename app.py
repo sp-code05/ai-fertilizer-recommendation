@@ -125,8 +125,6 @@ if st.button("Predict"):
             - Use organic compost when possible  
             """)
 
-            st.error(str(e))  # shows real error (hackathon proof)
-
     else:
         st.warning("AI not configured. Using offline system.")
 
