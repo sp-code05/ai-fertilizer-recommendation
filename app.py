@@ -91,14 +91,17 @@ Explain why this fertilizer is suitable and give simple farming advice.
 
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash-latest",
                 contents=prompt
             )
 
             st.success("🤖 AI Advice:")
             st.write(response.text)
 
-        except Exception:
+        except Exception as e:
+            st.error("REAL ERROR:")
+            st.write(e)
+
             st.warning("⚠️ AI service unavailable. Showing fallback advice.")
 
             st.info(f"""
@@ -107,6 +110,7 @@ Explain why this fertilizer is suitable and give simple farming advice.
 ✔ Based on trained agricultural dataset patterns.
 
 💡 General Farming Advice:
+
 - Maintain balanced irrigation
 - Avoid excess nitrogen fertilizer
 - Monitor crop health regularly
