@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
@@ -68,6 +69,35 @@ if st.button("Predict Fertilizer"):
     st.session_state["prediction"] = prediction[0]
 
     st.success(f"Recommended Fertilizer: {prediction[0]}")
+if st.session_state["prediction"] is not None:
+    st.subheader("Nutrient Analysis")
+
+    nutrients = ["Nitrogen", "Phosphorous", "Potassium"]
+    values = [nitrogen, phosphorous, potassium]
+
+    fig, ax = plt.subplots()
+    ax.bar(nutrients, values)
+    ax.set_title("NPK Levels")
+
+    st.pyplot(fig)
+# Confidence Score
+probs = model.predict_proba(input_data)
+confidence = np.max(probs) * 100
+
+st.subheader("Model Confidence")
+st.progress(int(confidence))
+st.write(f"Confidence: {confidence:.2f}%")
+# Soil Health Score
+health_score = (nitrogen + phosphorous + potassium) / 3
+
+st.subheader("Soil Health Meter")
+
+if health_score < 30:
+    st.error(f"Poor Soil Health ({health_score:.1f}/100)")
+elif health_score < 60:
+    st.warning(f"Moderate Soil Health ({health_score:.1f}/100)")
+else:
+    st.success(f"Good Soil Health ({health_score:.1f}/100)")
 
 # ---------------- AI ADVICE ----------------
 if st.session_state["prediction"] is not None:
